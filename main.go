@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"time"
-	"sync"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -17,45 +16,16 @@ func main() {
 	// count := db.Count()
 	// fmt.Println(count)
 
-	var wg sync.WaitGroup
+	start := time.Date(2022, 2, 6, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2022, 2, 16, 0, 0, 0, 0, time.UTC)
+	step := int64(20)
 
-	start := time.Now()
+	var trades []bson.D
+	starttime := time.Now()
+	db.DistributedQueryByTime(start.UnixMilli(), end.UnixMilli(), step, &trades)
+	elapsedtime := time.Since(starttime)
 
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-07")
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-08")
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-09")
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-10")
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-11")
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		db.testQuery("2022-02-12")
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	elapsed := time.Since(start)
-	fmt.Println("total:", elapsed)
+	fmt.Println(len(trades), elapsedtime)
 }
 
 func (db *DB)testQuery(date string) {
