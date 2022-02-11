@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"context"
 	"time"
+	"sync"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -13,29 +13,61 @@ func main() {
 	db := ConnectDB()
 	defer db.Disconnect()
 
-	filter := bson.D{}
-	count, err := db.coll.CountDocuments(context.TODO(), filter)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(count)
+	// count
+	// count := db.Count()
+	// fmt.Println(count)
 
-	filter = bson.D{}
-	cursor, err := db.coll.Find(context.TODO(), filter)
-	if err != nil {
-		panic(err)
-	}
+	var wg sync.WaitGroup
 
 	start := time.Now()
-	var trades []bson.D
-	err = cursor.All(context.TODO(), &trades)
-	if err != nil {
-		panic(err)
-	}
+
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-07")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-08")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-09")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-10")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-11")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		db.testQuery("2022-02-12")
+		wg.Done()
+	}()
+
+	wg.Wait()
+
 	elapsed := time.Since(start)
-	fmt.Println(elapsed)
+	fmt.Println("total:", elapsed)
+}
 
-	fmt.Println(trades)
-	
+func (db *DB)testQuery(date string) {
+	// query all
+	start := time.Now()
 
+	filter := bson.D{{"td", date}}
+	var trades []bson.D
+	db.Query(filter, &trades)
+
+	elapsed := time.Since(start)
+
+	fmt.Println(date, len(trades), elapsed)
+	// fmt.Println(trades[0])
 }
