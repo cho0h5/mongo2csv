@@ -3,9 +3,17 @@ package main
 import (
 	"fmt"
 	"time"
+	"sort"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
+
+type Trade struct {
+	Tp	float64
+	Tv	float64
+	Ab	string
+	Tms	int64
+}
 
 func main() {
 	// DB initialize
@@ -23,21 +31,15 @@ func main() {
 	var trades []bson.D
 	starttime := time.Now()
 	db.DistributedQueryByTime(start.UnixMilli(), end.UnixMilli(), step, &trades)
+	sort.Slice(trades, func(i, j int) bool {
+		_i := trades[i].Map()["tms"].(int64)
+		_j := trades[j].Map()["tms"].(int64)
+
+		return _i < _j
+	})
 	elapsedtime := time.Since(starttime)
 
 	fmt.Println(len(trades), elapsedtime)
-}
-
-func (db *DB)testQuery(date string) {
-	// query all
-	start := time.Now()
-
-	filter := bson.D{{"td", date}}
-	var trades []bson.D
-	db.Query(filter, &trades)
-
-	elapsed := time.Since(start)
-
-	fmt.Println(date, len(trades), elapsed)
-	// fmt.Println(trades[0])
+	fmt.Println(trades[0])
+	fmt.Println(trades[len(trades) - 1])
 }
